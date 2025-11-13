@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=VJz2Ob51dvZJ&format=png&color=000000">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vault Zero</title>
+  <meta name="description" content="Herramientas seguras de contraseñas, juegos, privacidad y trading. 100% en navegador, sin datos guardados." />
+  
+  <!-- Google Fonts: Inter + Space Grotesk -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    /* ====================== ROOT ====================== */
+    :root {
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'Space Grotesk', sans-serif;
+      
+      --bg: #ffffff;
+      --bg-alt: rgba(255, 255, 255, 0.75);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #3b82f6;
+      --accent-light: #60a5fa;
+      --accent-hover: #2563eb;
+      --border: rgba(59, 130, 246, 0.15);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 20px 50px rgba(59, 130, 246, 0.15);
+      --radius: 16px;
+      --radius-lg: 24px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --bg-alt: rgba(15, 23, 42, 0.7);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #60a5fa;
+      --accent-light: #93c5fd;
+      --accent-hover: #3b82f6;
+      --border: rgba(96, 165, 250, 0.2);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 20px 50px rgba(96, 165, 250, 0.2);
+    }
+
+    /* ====================== BASE ====================== */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      transition: var(--transition);
+      min-height: 100vh;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    /* ====================== TIPOGRAFÍA ====================== */
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    /* ====================== HEADER ====================== */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: var(--bg-alt);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 1000;
+      padding: 1rem 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 1.75rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: var(--transition);
+    }
+
+    .logo i {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.5rem 0;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 0;
+      background: var(--accent);
+      transition: var(--transition);
+      border-radius: 1px;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+    }
+
+    nav a:hover::after {
+      width: 100%;
+    }
+
+    .theme-toggle, .mobile-toggle {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      cursor: pointer;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover, .mobile-toggle:hover {
+      color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+      border-color: var(--accent);
+      transform: scale(1.1);
+    }
+
+    .mobile-toggle { display: none; }
+
+    /* ====================== HERO ====================== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 0 5%;
+      background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    [data-theme="dark"] .hero {
+      background: linear-gradient(135deg, #0a1324 0%, #1e293b 100%);
+    }
+
+    .hero-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .hero-text h1 {
+      font-size: 3.6rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+
+    .hero-text p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      max-width: 520px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      background: var(--accent);
+      color: white;
+      padding: 1rem 2.2rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1.05rem;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: 0.6s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .hero-img {
+      perspective: 1000px;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .hero-img img {
+      width: 100%;
+      max-width: 380px;
+      border-radius: 50%;
+      border: 8px solid var(--accent);
+      box-shadow: var(--shadow-lg);
+      transition: var(--transition);
+      margin: 0 auto;
+    }
+
+    .hero-img img:hover {
+      transform: scale(1.05);
+      border-color: var(--accent-light);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    /* ====================== SECCIONES ====================== */
+    section {
+      padding: 7rem 5%;
+      max-width: 1200px;
+      margin: 0 auto;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s ease-out;
+    }
+
+    section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.8rem;
+      margin-bottom: 4rem;
+      position: relative;
+      color: var(--text);
+    }
+
+    .section-title::after {
+      content: '';
+      width: 80px;
+      height: 4px;
+      background: var(--accent);
+      display: block;
+      margin: 1rem auto 0;
+      border-radius: 2px;
+    }
+
+    /* ====================== PROYECTOS ====================== */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.8rem;
+    }
+
+    .project-card {
+      background: var(--bg-alt);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      backdrop-filter: blur(12px);
+    }
+
+    .project-card:hover {
+      transform: translateY(-10px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .project-img {
+      height: 170px;
+      background: linear-gradient(45deg, var(--accent), var(--accent-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-img i {
+      font-size: 3.8rem;
+      color: white;
+      z-index: 1;
+      transition: var(--transition);
+    }
+
+    .project-card:hover .project-img i {
+      transform: scale(1.15);
+    }
+
+    .project-info {
+      padding: 1.6rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-info h3 {
+      margin-bottom: 0.6rem;
+      color: var(--accent);
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .project-info p {
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      font-size: 0.96rem;
+      flex-grow: 1;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .tag {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent);
+      padding: 0.35rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .tag:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    .project-links {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: auto;
+    }
+
+    .project-links a {
+      flex: 1;
+      text-align: center;
+      padding: 0.75rem;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .demo-btn {
+      background: var(--accent);
+      color: white;
+    }
+
+    .demo-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .code-btn {
+      background: transparent;
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+
+    .code-btn:hover {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ====================== DEMO ====================== */
+    .demo-container {
+      margin: 4rem 0;
+      padding: 2.5rem;
+      background: var(--bg-alt);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      text-align: center;
+      display: none;
+      backdrop-filter: blur(16px);
+    }
+
+    .demo-container h3 {
+      margin-bottom: 1.4rem;
+      color: var(--accent);
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    iframe {
+      width: 100%;
+      height: 520px;
+      border: none;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      background: white;
+    }
+
+    [data-theme="dark"] iframe {
+      background: #111;
+    }
+
+    .close-demo {
+      margin-top: 1.4rem;
+      padding: 0.75rem 1.8rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .close-demo:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    /* ====================== FOOTER ====================== */
+    footer {
+      background: var(--bg-alt);
+      padding: 5rem 5% 3rem;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.4rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .social-links a {
+      color: var(--text-muted);
+      font-size: 1.6rem;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid var(--border);
+      transition: var(--transition);
+    }
+
+    .social-links a:hover {
+      color: white;
+      background: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+    }
+
+    footer p {
+      color: var(--text-muted);
+      font-size: 0.94rem;
+    }
+
+    /* ====================== RESPONSIVE ====================== */
+    @media (max-width: 992px) {
+      .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 2.5rem;
+      }
+      .hero-text h1 { font-size: 3.2rem; }
+      .hero-img img { max-width: 320px; }
+    }
+
+    @media (max-width: 768px) {
+      .mobile-toggle { display: flex; }
+      nav ul {
+        position: absolute;
+        top: 100%; left: 0; right: 0;
+        background: var(--bg-alt);
+        flex-direction: column;
+        padding: 1.5rem 5%;
+        display: none;
+        border-top: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        border-radius: 0 0 18px 18px;
+        backdrop-filter: blur(16px);
+      }
+      nav ul.show { display: flex; }
+      .hero-text h1 { font-size: 2.8rem; }
+      .section-title { font-size: 2.4rem; }
+      iframe { height: 420px; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-text h1 { font-size: 2.4rem; }
+      .project-links a { font-size: 0.88rem; padding: 0.7rem; }
+      iframe { height: 360px; }
+      .btn { padding: 0.9rem 1.8rem; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- ====================== HEADER ====================== -->
+  <header>
+    <a href="#" class="logo">
+      <i class="fas fa-shield-alt"></i> Vault Zero
+    </a>
+    <nav>
+      <ul id="nav-menu">
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#proyectos">Proyectos</a></li>
+        <li><a href="#contacto">Contacto</a></li>
+      </ul>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar tema">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button class="mobile-toggle" id="mobile-toggle" aria-label="Menú móvil">
+        <i class="fas fa-bars"></i>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ====================== HERO ====================== -->
+  <section class="hero" id="inicio">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1>Bienvenido a Vault Zero</h1>
+        <p>Seguridad, juegos, privacidad y trading. Herramientas potentes que <strong>no guardan datos</strong>. Todo en tu navegador.</p>
+        <a href="#proyectos" class="btn">
+          Explorar Proyectos
+        </a>
+      </div>
+      <div class="hero-img">
+        <img src="1.png" alt="Vault Zero Logo" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== PROYECTOS ====================== -->
+  <section id="proyectos">
+    <h2 class="section-title">Mis Proyectos</h2>
+    <div class="projects-grid">
+      <!-- Proyecto 1 -->
+      <div class="project-card">
+        <div class="project-img"><i class="fas fa-key"></i></div>
+        <div class="project-info">
+          <h3>Generador de Contraseñas</h3>
+          <p>Contraseñas de 256 bits con entropía real. <strong>100% cliente-side</strong>. Nada se almacena.</p>
+          <div class="tags">
+            <span class="tag">Cripto</span>
+            <span class="tag">Sin Datos</span>
+            <span class="tag">JS</span>
+          </div>
+          <div class="project-links">
+            <a href="pass.html" class="demo-btn" onclick="showDemo('passgen')">Probar</a>
+            <a href="#" class="code-btn">Código</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proyecto 2 -->
+      <div class="project-card">
+        <div class="project-img"><i class="fas fa-plane"></i></div>
+        <div class="project-info">
+          <h3>Sky Fighter</h3>
+          <p>Juego arcade 2D con power-ups y leaderboard local. ¡Sin anuncios!</p>
+          <div class="tags">
+            <span class="tag">Canvas</span>
+            <span class="tag">Puntuación</span>
+            <span class="tag">Táctil</span>
+          </div>
+          <div class="project-links">
+            <a href="#" class="demo-btn" onclick="showDemo('plane')">Jugar</a>
+            <a href="#" class="code-btn">Código</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proyecto 3 -->
+      <div class="project-card">
+        <div class="project-img"><i class="fas fa-image"></i></div>
+        <div class="project-info">
+          <h3>EXIF Cleaner</h3>
+          <p>Borra GPS, cámara y metadatos de imágenes. <strong>100% en navegador</strong>.</p>
+          <div class="tags">
+            <span class="tag">Privacidad</span>
+            <span class="tag">EXIF</span>
+            <span class="tag">Descarga</span>
+          </div>
+          <div class="project-links">
+            <a href="meta.html" class="demo-btn" onclick="showDemo('exif')">Limpiar</a>
+            <a href="#" class="code-btn">Código</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proyecto 4 -->
+      <div class="project-card">
+        <div class="project-img"><i class="fas fa-store"></i></div>
+        <div class="project-info">
+          <h3>Tienda Segura</h3>
+          <p>E-commerce con Stripe, carrito e inventario en tiempo real.</p>
+          <div class="tags">
+            <span class="tag">React</span>
+            <span class="tag">Stripe</span>
+            <span class="tag">JWT</span>
+          </div>
+          <div class="project-links">
+            <a href="#" class="demo-btn" onclick="showDemo('shop')">Ver</a>
+            <a href="#" class="code-btn">Código</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proyecto 5 -->
+      <div class="project-card">
+        <div class="project-img"><i class="fas fa-chart-line"></i></div>
+        <div class="project-info">
+          <h3>Señales de Futuros</h3>
+          <p>Bot con RSI, volumen y alertas en tiempo real + backtesting.</p>
+          <div class="tags">
+            <span class="tag">Bot</span>
+            <span class="tag">Backtest</span>
+            <span class="tag">Alertas</span>
+          </div>
+          <div class="project-links">
+            <a href="#" class="demo-btn" onclick="showDemo('trading')">Ver</a>
+            <a href="#" class="code-btn">Código</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo Container -->
+    <div id="demo-container" class="demo-container">
+      <h3>Demo Interactiva</h3>
+      <div id="demo-content"></div>
+      <button class="close-demo" onclick="hideDemo()">Cerrar</button>
+    </div>
+  </section>
+
+  <!-- ====================== FOOTER ====================== -->
+  <footer id="contacto">
+    <h2 class="section-title" style="color:var(--accent); margin-bottom:1.2rem;">Contacto</h2>
+    <p>¿Proyecto seguro, rápido y sin rastros?</p>
+    <div class="social-links">
+      <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+      <a href="mailto:contacto@vaultzero.dev" aria-label="Email"><i class="fas fa-envelope"></i></a>
+      <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+    </div>
+    <p>© 2025 <strong>Vault Zero</strong>. Privacidad por diseño.</p>
+  </footer>
+
+  <!-- ====================== JAVASCRIPT ====================== -->
+  <script>
+    // Tema
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+    const icon = themeToggle.querySelector('i');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    body.setAttribute('data-theme', savedTheme);
+    icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+    themeToggle.addEventListener('click', () => {
+      const current = body.getAttribute('data-theme');
+      const newTheme = current === 'light' ? 'dark' : 'light';
+      body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    });
+
+    // Menú móvil
+    const mobileToggle = document.getElementById('mobile-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    mobileToggle.addEventListener('click', () => {
+      navMenu.classList.toggle('show');
+      const i = mobileToggle.querySelector('i');
+      i.classList.toggle('fa-bars');
+      i.classList.toggle('fa-times');
+    });
+
+    document.querySelectorAll('nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (navMenu.classList.contains('show')) {
+          navMenu.classList.remove('show');
+          mobileToggle.querySelector('i').className = 'fas fa-bars';
+        }
+      });
+    });
+
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('section').forEach(section => {
+      observer.observe(section);
+    });
+
+    // Demos
+    const demos = {
+      passgen: `<p><strong>Generador de Contraseñas</strong></p><iframe src="https://password-gen.vaultzero.dev" title="Password Generator"></iframe>`,
+      plane: `<p><strong>Sky Fighter</strong></p><iframe src="https://skyfighter.vaultzero.dev" title="Juego"></iframe>`,
+      exif: `<p><strong>EXIF Cleaner</strong></p><iframe src="https://exif-cleaner.vaultzero.dev" title="EXIF Cleaner"></iframe>`,
+      shop: `<p><strong>Tienda Online</strong></p><iframe src="https://shop.vaultzero.dev" title="Tienda"></iframe>`,
+      trading: `<p><strong>Señales de Trading</strong></p><iframe src="https://futures.vaultzero.dev" title="Trading Bot"></iframe>`
+    };
+
+    function showDemo(id) {
+      const container = document.getElementById('demo-container');
+      const content = document.getElementById('demo-content');
+      content.innerHTML = demos[id] || '<p>Demo en desarrollo.</p>';
+      container.style.display = 'block';
+      setTimeout(() => container.scrollIntoView({ behavior: 'smooth' }), 100);
+    }
+
+    function hideDemo() {
+      document.getElementById('demo-container').style.display = 'none';
+    }
+
+    document.getElementById('demo-container').addEventListener('click', function(e) {
+      if (e.target === this) hideDemo();
+    });
+  </script>
+</body>
+</html>

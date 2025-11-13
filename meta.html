@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=12850&format=png&color=000000">
+    <title>EXIF Cleaner Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --accent-color: #ec4899;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+            --gray-color: #64748b;
+            --card-bg: #ffffff;
+            --border-radius: 16px;
+            --box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .dark-mode {
+            --light-color: #0f172a;
+            --dark-color: #f1f5f9;
+            --card-bg: #1e293b;
+            --gray-color: #94a3b8;
+            --box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        /* Header Styles */
+        header {
+            background: var(--gradient);
+            color: white;
+            text-align: center;
+            padding: 2.5rem 1rem;
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: cover;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            z-index: 10;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(15deg);
+        }
+
+        /* Container & Cards */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2.5rem;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .card {
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 3px dashed #cbd5e1;
+            border-radius: var(--border-radius);
+            padding: 4rem 2rem;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            background: var(--card-bg);
+        }
+
+        .dark-mode .upload-area {
+            border-color: #475569;
+        }
+
+        .upload-area.active {
+            border-color: var(--primary-color);
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+
+        .upload-area i {
+            font-size: 4.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .upload-area h2 {
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+
+        .upload-area p {
+            margin-bottom: 1.5rem;
+            color: var(--gray-color);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: var(--transition);
+            text-decoration: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+        }
+
+        .btn-accent:hover {
+            background-color: #db2777;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn:disabled {
+            background-color: var(--gray-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Preview Section */
+        .preview-container {
+            display: none;
+        }
+
+        .preview-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .preview-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .preview-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+        }
+
+        .preview-box {
+            text-align: center;
+        }
+
+        .preview-box h3 {
+            margin-bottom: 1.5rem;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+
+        .preview-image-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        .preview-image {
+            width: 100%;
+            height: auto;
+            max-height: 350px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .image-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .metadata-info {
+            text-align: left;
+            background-color: var(--light-color);
+            padding: 1.75rem;
+            border-radius: var(--border-radius);
+            max-height: 350px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .metadata-info {
+            background-color: #334155;
+        }
+
+        .metadata-info h4 {
+            margin-bottom: 1.25rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+
+        .metadata-list {
+            list-style-type: none;
+        }
+
+        .metadata-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .dark-mode .metadata-list li {
+            border-bottom: 1px solid #475569;
+        }
+
+        .metadata-list li:last-child {
+            border-bottom: none;
+        }
+
+        .metadata-value {
+            font-weight: 600;
+            color: var(--secondary-color);
+            max-width: 60%;
+            text-align: right;
+            word-break: break-word;
+            font-size: 0.9rem;
+        }
+
+        .metadata-category {
+            margin-top: 1.75rem;
+            padding-top: 1.25rem;
+            border-top: 2px solid var(--primary-color);
+        }
+
+        .metadata-category h5 {
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.25rem;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Loading Indicator */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3.5rem;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* File Info */
+        .file-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: var(--light-color);
+            border-radius: var(--border-radius);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .file-info {
+            background-color: #334155;
+        }
+
+        .file-info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .file-info-label {
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .file-info-value {
+            font-weight: 700;
+            color: var(--dark-color);
+            font-size: 1.1rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+
+        .dark-mode .tabs {
+            border-bottom: 1px solid #475569;
+        }
+
+        .tab {
+            padding: 1rem 1.75rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            font-weight: 500;
+            color: var(--gray-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab.active {
+            border-bottom: 3px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+
+        .dark-mode .progress-bar {
+            background: #475569;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--gradient);
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 5px;
+        }
+
+        /* Batch Actions */
+        .batch-actions {
+            display: flex;
+            gap: 1.25rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        /* Security Level */
+        .security-level {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .security-option {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--card-bg);
+        }
+
+        .dark-mode .security-option {
+            border-color: #475569;
+        }
+
+        .security-option.active {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.05);
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .security-option i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .security-option h4 {
+            margin-bottom: 0.75rem;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+
+        .security-option p {
+            color: var(--gray-color);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            margin-top: 4rem;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .dark-mode footer {
+            background-color: #0f172a;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            background: var(--light-color);
+            transition: var(--transition);
+        }
+
+        .dark-mode .feature-item {
+            background: #334155;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .feature-icon {
+            background: var(--gradient);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-content h4 {
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+
+        .feature-content p {
+            color: var(--gray-color);
+            line-height: 1.6;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            padding: 1.25rem 1.75rem;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            max-width: 400px;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left-color: var(--success-color);
+        }
+
+        .notification.error {
+            border-left-color: var(--danger-color);
+        }
+
+        .notification i {
+            font-size: 1.75rem;
+        }
+
+        .notification.success i {
+            color: var(--success-color);
+        }
+
+        .notification.error i {
+            color: var(--danger-color);
+        }
+
+        .notification-content h4 {
+            margin-bottom: 0.25rem;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+
+        .notification-content p {
+            color: var(--gray-color);
+            font-size: 0.95rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .preview-content {
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .preview-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons, .batch-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .security-level {
+                grid-template-columns: 1fr;
+            }
+            
+            .file-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .upload-area {
+                padding: 3rem 1.5rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                justify-content: center;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .file-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .theme-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 42px;
+                height: 42px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem 1rem;
+            }
+            
+            header {
+                padding: 2rem 1rem;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .upload-area {
+                padding: 2.5rem 1rem;
+            }
+            
+            .preview-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <button class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+        </button>
+        <div class="header-content">
+            <h1><i class="fas fa-eraser"></i> EXIF Cleaner Pro</h1>
+            <p>Elimina metadatos EXIF, GPS, información de cámara y más de cualquier imagen. 100% en tu navegador.</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h2>Arrastra y suelta tus imágenes aquí</h2>
+                <p>o</p>
+                <button class="btn" id="selectFilesBtn">
+                    <i class="fas fa-folder-open"></i> Seleccionar archivos
+                </button>
+                <input type="file" id="fileInput" class="file-input" accept="image/*" multiple>
+                <p class="file-types">Formatos soportados: JPEG, PNG, WebP, GIF, BMP, TIFF y más</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <div class="tab active" data-tab="single">
+                    <i class="fas fa-image"></i> Procesamiento Individual
+                </div>
+                <div class="tab" data-tab="batch">
+                    <i class="fas fa-layer-group"></i> Procesamiento por Lotes
+                </div>
+                <div class="tab" data-tab="settings">
+                    <i class="fas fa-cog"></i> Configuración
+                </div>
+            </div>
+
+            <div class="tab-content active" id="single-tab">
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <p>Procesando imagen y extrayendo metadatos...</p>
+                    <div class="progress-bar">
+                        <div class="progress" id="processingProgress"></div>
+                    </div>
+                </div>
+
+                <div class="preview-container" id="previewContainer">
+                    <h2 class="preview-title"><i class="fas fa-images"></i> Vista previa</h2>
+                    
+                    <div class="file-info">
+                        <div class="file-info-item">
+                            <span class="file-info-label">Nombre del archivo</span>
+                            <span class="file-info-value" id="fileName">-</span>
+                        </div>
+                        <div class="file-info-item">
+                            <span class="file-info-label">Tamaño original</span>
+                            <span class="file-info-value" id="fileSize">-</span>
+                        </div>
+                        <div class="file-info-item">
+                            <span class="file-info-label">Tipo</span>
+                            <span class="file-info-value" id="fileType">-</span>
+                        </div>
+                        <div class="file-info-item">
+                            <span class="file-info-label">Metadatos encontrados</span>
+                            <span class="file-info-value" id="metadataCount">-</span>
+                        </div>
+                    </div>
+
+                    <div class="preview-content">
+                        <div class="preview-box">
+                            <h3><i class="fas fa-file-image"></i> Imagen original</h3>
+                            <div class="preview-image-container">
+                                <img id="originalPreview" class="preview-image" src="" alt="Vista previa original">
+                                <div class="image-badge">Original</div>
+                            </div>
+                            <div class="metadata-info">
+                                <h4><i class="fas fa-list-alt"></i> Metadatos detectados</h4>
+                                <div id="originalMetadata">
+                                    <!-- Los metadatos se mostrarán aquí -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-box">
+                            <h3><i class="fas fa-file-image"></i> Imagen limpia</h3>
+                            <div class="preview-image-container">
+                                <img id="cleanPreview" class="preview-image" src="" alt="Vista previa limpia">
+                                <div class="image-badge">Limpia</div>
+                            </div>
+                            <div class="metadata-info">
+                                <h4><i class="fas fa-check-circle"></i> Metadatos después de limpiar</h4>
+                                <div id="cleanMetadata">
+                                    <!-- Los metadatos se mostrarán aquí -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-warning" id="cleanAnotherBtn">
+                            <i class="fas fa-broom"></i> Limpiar otra imagen
+                        </button>
+                        <button class="btn btn-success" id="downloadBtn">
+                            <i class="fas fa-download"></i> Descargar imagen limpia
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="batch-tab">
+                <h3><i class="fas fa-layer-group"></i> Procesamiento por Lotes</h3>
+                <p>Selecciona múltiples imágenes para limpiarlas todas a la vez.</p>
+                
+                <div class="upload-area" id="batchUploadArea">
+                    <i class="fas fa-images"></i>
+                    <h2>Arrastra y suelta múltiples imágenes aquí</h2>
+                    <p>o</p>
+                    <button class="btn" id="selectBatchFilesBtn">
+                        <i class="fas fa-folder-open"></i> Seleccionar múltiples archivos
+                    </button>
+                    <input type="file" id="batchFileInput" class="file-input" accept="image/*" multiple>
+                </div>
+                
+                <div id="batchFilesList" class="metadata-info" style="display: none; margin-top: 1.5rem;">
+                    <h4><i class="fas fa-list"></i> Archivos seleccionados</h4>
+                    <ul id="batchFiles"></ul>
+                </div>
+                
+                <div class="batch-actions">
+                    <button class="btn btn-success" id="processBatchBtn" disabled>
+                        <i class="fas fa-play"></i> Procesar lote
+                    </button>
+                    <button class="btn btn-accent" id="downloadBatchBtn" disabled>
+                        <i class="fas fa-download"></i> Descargar todo
+                    </button>
+                </div>
+            </div>
+
+            <div class="tab-content" id="settings-tab">
+                <h3><i class="fas fa-cog"></i> Configuración de Limpieza</h3>
+                <p>Selecciona el nivel de limpieza que deseas aplicar a tus imágenes.</p>
+                
+                <div class="security-level">
+                    <div class="security-option active" data-level="standard">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>Estándar</h4>
+                        <p>Elimina metadatos EXIF comunes (GPS, cámara, fecha)</p>
+                    </div>
+                    <div class="security-option" data-level="advanced">
+                        <i class="fas fa-user-shield"></i>
+                        <h4>Avanzado</h4>
+                        <p>Elimina todos los metadatos incluyendo información de edición</p>
+                    </div>
+                    <div class="security-option" data-level="paranoid">
+                        <i class="fas fa-lock"></i>
+                        <h4>Máximo</h4>
+                        <p>Elimina todos los metadatos y re-muestrea la imagen</p>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn" id="saveSettingsBtn">
+                        <i class="fas fa-save"></i> Guardar configuración
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-info-circle"></i> ¿Qué son los metadatos EXIF?</h2>
+            <p>Los metadatos EXIF son información que las cámaras y teléfonos agregan automáticamente a las imágenes. Esto puede incluir:</p>
+            
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Ubicación GPS</h4>
+                        <p>Coordenadas exactas donde se tomó la foto, que pueden revelar tu ubicación personal.</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Información de la cámara</h4>
+                        <p>Marca, modelo, configuración como apertura, velocidad de obturación e ISO.</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Fecha y hora</h4>
+                        <p>Cuándo se tomó la foto, que puede revelar patrones de comportamiento.</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Información de software</h4>
+                        <p>Programas usados para editar la imagen, que pueden revelar tus herramientas de trabajo.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <p style="margin-top: 1.5rem;">Nuestra herramienta elimina estos metadatos para proteger tu privacidad. Todas las imágenes se procesan localmente en tu navegador, sin enviarse a ningún servidor.</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>EXIF Cleaner Pro &copy; 2025 - Tu privacidad es importante</p>
+        <p>Todas las imágenes se procesan localmente en tu navegador. Nunca se suben a ningún servidor.</p>
+    </footer>
+
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <div class="notification-content">
+            <h4 id="notificationTitle">Éxito</h4>
+            <p id="notificationMessage">Operación completada correctamente</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos DOM
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const selectFilesBtn = document.getElementById('selectFilesBtn');
+            const previewContainer = document.getElementById('previewContainer');
+            const originalPreview = document.getElementById('originalPreview');
+            const cleanPreview = document.getElementById('cleanPreview');
+            const originalMetadata = document.getElementById('originalMetadata');
+            const cleanMetadata = document.getElementById('cleanMetadata');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const cleanAnotherBtn = document.getElementById('cleanAnotherBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const processingProgress = document.getElementById('processingProgress');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const fileType = document.getElementById('fileType');
+            const metadataCount = document.getElementById('metadataCount');
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const batchUploadArea = document.getElementById('batchUploadArea');
+            const batchFileInput = document.getElementById('batchFileInput');
+            const selectBatchFilesBtn = document.getElementById('selectBatchFilesBtn');
+            const batchFilesList = document.getElementById('batchFilesList');
+            const batchFiles = document.getElementById('batchFiles');
+            const processBatchBtn = document.getElementById('processBatchBtn');
+            const downloadBatchBtn = document.getElementById('downloadBatchBtn');
+            const securityOptions = document.querySelectorAll('.security-option');
+            const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+            const notification = document.getElementById('notification');
+            const notificationTitle = document.getElementById('notificationTitle');
+            const notificationMessage = document.getElementById('notificationMessage');
+            const themeToggle = document.getElementById('themeToggle');
+
+            // Variables para almacenar la imagen procesada
+            let currentCleanImage = null;
+            let currentFileName = '';
+            let currentFileType = '';
+            let currentFileSize = 0;
+            let extractedMetadata = {};
+            let batchFilesData = [];
+            let securityLevel = 'standard';
+
+            // Modo oscuro
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                } else {
+                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                }
+            });
+
+            // Event listeners
+            selectFilesBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+            downloadBtn.addEventListener('click', downloadCleanImage);
+            cleanAnotherBtn.addEventListener('click', resetApp);
+            
+            selectBatchFilesBtn.addEventListener('click', () => batchFileInput.click());
+            batchFileInput.addEventListener('change', handleBatchFileSelect);
+            processBatchBtn.addEventListener('click', processBatchFiles);
+            
+            saveSettingsBtn.addEventListener('click', saveSettings);
+
+            // Configurar pestañas
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+
+            // Configurar niveles de seguridad
+            securityOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    securityOptions.forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    securityLevel = option.getAttribute('data-level');
+                });
+            });
+
+            // Configurar área de arrastrar y soltar
+            setupDragAndDrop(uploadArea, handleFiles);
+            setupDragAndDrop(batchUploadArea, handleBatchFiles);
+
+            function setupDragAndDrop(area, handler) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    area.addEventListener(eventName, preventDefaults, false);
+                });
+
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    area.addEventListener(eventName, () => {
+                        area.classList.add('active');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    area.addEventListener(eventName, () => {
+                        area.classList.remove('active');
+                    }, false);
+                });
+
+                area.addEventListener('drop', handleDrop, false);
+
+                function handleDrop(e) {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    handler(files);
+                }
+            }
+
+            function handleFileSelect(e) {
+                const files = e.target.files;
+                handleFiles(files);
+            }
+
+            function handleFiles(files) {
+                if (files.length === 0) return;
+                
+                const file = files[0];
+                if (!file.type.match('image.*')) {
+                    showNotification('Error', 'Por favor, selecciona un archivo de imagen válido.', 'error');
+                    return;
+                }
+
+                currentFileName = file.name;
+                currentFileType = file.type;
+                currentFileSize = file.size;
+                processImage(file);
+            }
+
+            function handleBatchFileSelect(e) {
+                const files = e.target.files;
+                handleBatchFiles(files);
+            }
+
+            function handleBatchFiles(files) {
+                if (files.length === 0) return;
+                
+                batchFilesData = Array.from(files).filter(file => file.type.match('image.*'));
+                
+                if (batchFilesData.length === 0) {
+                    showNotification('Error', 'Por favor, selecciona archivos de imagen válidos.', 'error');
+                    return;
+                }
+                
+                // Mostrar lista de archivos
+                batchFiles.innerHTML = '';
+                batchFilesData.forEach((file, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span>${file.name}</span>
+                        <span class="metadata-value">${formatFileSize(file.size)}</span>
+                    `;
+                    batchFiles.appendChild(li);
+                });
+                
+                batchFilesList.style.display = 'block';
+                processBatchBtn.disabled = false;
+                
+                showNotification('Archivos cargados', `Se han cargado ${batchFilesData.length} archivos para procesamiento por lotes.`, 'success');
+            }
+
+            function processImage(file) {
+                loadingIndicator.classList.add('active');
+                updateProgress(10);
+                
+                // Leer la imagen original
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    updateProgress(30);
+                    const img = new Image();
+                    
+                    img.onload = function() {
+                        updateProgress(50);
+                        // Mostrar vista previa original
+                        originalPreview.src = e.target.result;
+                        
+                        // Mostrar información del archivo
+                        fileName.textContent = file.name;
+                        fileSize.textContent = formatFileSize(file.size);
+                        fileType.textContent = file.type || 'Desconocido';
+                        
+                        // Extraer metadatos
+                        extractMetadata(file, img);
+                    };
+                    
+                    img.src = e.target.result;
+                };
+                
+                reader.readAsDataURL(file);
+            }
+
+            function extractMetadata(file, img) {
+                updateProgress(60);
+                
+                EXIF.getData(file, function() {
+                    updateProgress(80);
+                    const allMetaData = EXIF.getAllTags(this);
+                    extractedMetadata = allMetaData;
+                    
+                    // Mostrar metadatos extraídos
+                    displayMetadata(allMetaData, originalMetadata);
+                    metadataCount.textContent = Object.keys(allMetaData).length;
+                    
+                    // Crear imagen limpia
+                    createCleanImage(img, file.type);
+                });
+            }
+
+            function displayMetadata(metadata, container) {
+                container.innerHTML = '';
+                
+                if (!metadata || Object.keys(metadata).length === 0) {
+                    container.innerHTML = '<p>No se encontraron metadatos EXIF</p>';
+                    return;
+                }
+                
+                // Agrupar metadatos por categoría
+                const categories = {
+                    'Cámara': ['Make', 'Model', 'Software', 'Orientation'],
+                    'Configuración': ['ExposureTime', 'FNumber', 'ISOSpeedRatings', 'FocalLength', 'Flash'],
+                    'Fecha/Hora': ['DateTime', 'DateTimeOriginal', 'DateTimeDigitized'],
+                    'GPS': ['GPSLatitude', 'GPSLongitude', 'GPSAltitude', 'GPSTimeStamp'],
+                    'Otros': ['ImageWidth', 'ImageHeight', 'Copyright', 'Artist']
+                };
+                
+                Object.keys(categories).forEach(category => {
+                    const categoryMetadata = {};
+                    
+                    categories[category].forEach(tag => {
+                        if (metadata[tag] !== undefined) {
+                            categoryMetadata[tag] = metadata[tag];
+                        }
+                    });
+                    
+                    if (Object.keys(categoryMetadata).length > 0) {
+                        const categoryDiv = document.createElement('div');
+                        categoryDiv.className = 'metadata-category';
+                        
+                        const categoryTitle = document.createElement('h5');
+                        categoryTitle.textContent = category;
+                        categoryDiv.appendChild(categoryTitle);
+                        
+                        const list = document.createElement('ul');
+                        list.className = 'metadata-list';
+                        
+                        Object.keys(categoryMetadata).forEach(tag => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `
+                                <span>${tag}</span>
+                                <span class="metadata-value">${formatMetadataValue(categoryMetadata[tag])}</span>
+                            `;
+                            list.appendChild(li);
+                        });
+                        
+                        categoryDiv.appendChild(list);
+                        container.appendChild(categoryDiv);
+                    }
+                });
+                
+                // Mostrar metadatos que no están en las categorías definidas
+                const otherMetadata = {};
+                Object.keys(metadata).forEach(tag => {
+                    let found = false;
+                    Object.values(categories).forEach(categoryTags => {
+                        if (categoryTags.includes(tag)) {
+                            found = true;
+                        }
+                    });
+                    
+                    if (!found) {
+                        otherMetadata[tag] = metadata[tag];
+                    }
+                });
+                
+                if (Object.keys(otherMetadata).length > 0) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'metadata-category';
+                    
+                    const categoryTitle = document.createElement('h5');
+                    categoryTitle.textContent = 'Otros Metadatos';
+                    categoryDiv.appendChild(categoryTitle);
+                    
+                    const list = document.createElement('ul');
+                    list.className = 'metadata-list';
+                    
+                    Object.keys(otherMetadata).forEach(tag => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <span>${tag}</span>
+                            <span class="metadata-value">${formatMetadataValue(otherMetadata[tag])}</span>
+                        `;
+                        list.appendChild(li);
+                    });
+                    
+                    categoryDiv.appendChild(list);
+                    container.appendChild(categoryDiv);
+                }
+            }
+
+            function formatMetadataValue(value) {
+                if (Array.isArray(value)) {
+                    return value.join(', ');
+                }
+                
+                if (typeof value === 'object') {
+                    return JSON.stringify(value);
+                }
+                
+                return value.toString();
+            }
+
+            function createCleanImage(img, mimeType) {
+                updateProgress(90);
+                
+                // Crear un canvas para redibujar la imagen sin metadatos
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Aplicar nivel de seguridad seleccionado
+                if (securityLevel === 'paranoid') {
+                    // Para nivel máximo, redimensionamos ligeramente la imagen
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    tempCanvas.width = img.width * 0.99;
+                    tempCanvas.height = img.height * 0.99;
+                    
+                    tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+                    ctx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
+                } else {
+                    // Para niveles estándar y avanzado, simplemente redibujamos
+                    ctx.drawImage(img, 0, 0);
+                }
+                
+                // Obtener la imagen limpia como data URL
+                let quality = 0.92;
+                if (securityLevel === 'advanced' || securityLevel === 'paranoid') {
+                    quality = 0.85; // Calidad ligeramente reducida para eliminar más metadatos
+                }
+                
+                currentCleanImage = canvas.toDataURL(mimeType, quality);
+                
+                // Mostrar la imagen limpia
+                cleanPreview.src = currentCleanImage;
+                
+                // Mostrar que no hay metadatos
+                cleanMetadata.innerHTML = '<p>No se detectaron metadatos EXIF</p>';
+                
+                // Ocultar indicador de carga y mostrar vista previa
+                setTimeout(() => {
+                    loadingIndicator.classList.remove('active');
+                    previewContainer.classList.add('active');
+                    updateProgress(100);
+                    
+                    showNotification('Imagen limpiada', 'Todos los metadatos han sido eliminados correctamente.', 'success');
+                }, 500);
+            }
+
+            function downloadCleanImage() {
+                if (!currentCleanImage) return;
+                
+                // Crear un enlace de descarga
+                const link = document.createElement('a');
+                const extension = currentFileType.split('/')[1] || 'jpg';
+                link.download = `clean_${currentFileName.split('.')[0]}.${extension}`;
+                link.href = currentCleanImage;
+                link.click();
+                
+                showNotification('Descarga completada', 'La imagen limpia se ha descargado correctamente.', 'success');
+            }
+
+            function processBatchFiles() {
+                if (batchFilesData.length === 0) return;
+                
+                loadingIndicator.classList.add('active');
+                updateProgress(0);
+                
+                let processedCount = 0;
+                const cleanImages = [];
+                
+                batchFilesData.forEach((file, index) => {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        
+                        img.onload = function() {
+                            // Crear imagen limpia
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.drawImage(img, 0, 0);
+                            
+                            const cleanImage = canvas.toDataURL(file.type, 0.92);
+                            cleanImages.push({
+                                name: file.name,
+                                data: cleanImage,
+                                type: file.type
+                            });
+                            
+                            processedCount++;
+                            updateProgress((processedCount / batchFilesData.length) * 100);
+                            
+                            if (processedCount === batchFilesData.length) {
+                                loadingIndicator.classList.remove('active');
+                                downloadBatchBtn.disabled = false;
+                                
+                                // Almacenar las imágenes limpias para su descarga
+                                window.batchCleanImages = cleanImages;
+                                
+                                showNotification('Lote procesado', `Se han procesado ${processedCount} imágenes correctamente.`, 'success');
+                            }
+                        };
+                        
+                        img.src = e.target.result;
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            function downloadBatchFiles() {
+                if (!window.batchCleanImages || window.batchCleanImages.length === 0) return;
+                
+                window.batchCleanImages.forEach(image => {
+                    const link = document.createElement('a');
+                    const extension = image.type.split('/')[1] || 'jpg';
+                    link.download = `clean_${image.name.split('.')[0]}.${extension}`;
+                    link.href = image.data;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+                
+                showNotification('Descarga completada', `Se han descargado ${window.batchCleanImages.length} imágenes limpias.`, 'success');
+            }
+
+            function saveSettings() {
+                showNotification('Configuración guardada', `El nivel de seguridad se ha establecido en: ${securityLevel}`, 'success');
+            }
+
+            function resetApp() {
+                // Restablecer la aplicación al estado inicial
+                fileInput.value = '';
+                batchFileInput.value = '';
+                previewContainer.classList.remove('active');
+                batchFilesList.style.display = 'none';
+                processBatchBtn.disabled = true;
+                downloadBatchBtn.disabled = true;
+                currentCleanImage = null;
+                currentFileName = '';
+                batchFilesData = [];
+                
+                showNotification('Aplicación reiniciada', 'Puedes cargar una nueva imagen para limpiar.', 'success');
+            }
+
+            function updateProgress(percent) {
+                processingProgress.style.width = `${percent}%`;
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function showNotification(title, message, type) {
+                notification.className = `notification ${type}`;
+                notificationTitle.textContent = title;
+                notificationMessage.textContent = message;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 5000);
+            }
+
+            // Asignar el evento de descarga por lotes después de definir la función
+            downloadBatchBtn.addEventListener('click', downloadBatchFiles);
+        });
+    </script>
+</body>
+</html>

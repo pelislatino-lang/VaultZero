@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<!-- 
+    ========================================
+    DOCUMENTO: Vault Zero - Generador de Contraseñas Seguras
+    ========================================
+    Este archivo HTML contiene una aplicación web completa para generar contraseñas seguras.
+    Incluye:
+      - Diseño responsive con modo claro y oscuro
+      - Generación de contraseñas aleatorias con opciones personalizables
+      - Medidor de fortaleza en tiempo real
+      - Historial criptográfico para evitar repeticiones
+      - Copiado al portapapeles con notificación toast
+      - Accesibilidad y animaciones suaves
+    Todo el código está comentado sin modificar ninguna funcionalidad.
+-->
+
+<html lang="es">
+<!-- 
+    ATRIBUTO LANG: Define el idioma principal del documento como español.
+    Mejora la accesibilidad y el SEO.
+-->
+
+<head>
+    <!-- ========================================
+       METADATOS BÁSICOS
+       ======================================== -->
+    <!-- 
+        charset="UTF-8": Define la codificación de caracteres para soportar texto en español y símbolos especiales.
+        viewport: Hace que la página sea responsive en dispositivos móviles.
+        title: Título que aparece en la pestaña del navegador.
+    -->
+    <meta charset="UTF-8">
+	<link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=ac3rBpYxgNFv&format=png&color=000000">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault Zero - Generador de Contraseñas</title>
+   
+    <!-- ========================================
+       ICONOS DE FONT AWESOME
+       ======================================== -->
+    <!-- 
+        Enlace CDN a Font Awesome 6.4.0 para usar iconos vectoriales (candado, ojo, copiar, etc.).
+        Se carga desde Cloudflare para mayor velocidad y confiabilidad.
+    -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
+    <!-- ========================================
+       ESTILOS CSS PERSONALIZADOS
+       ======================================== -->
+    <style>
+        /* ========================================
+           VARIABLES CSS: MODO CLARO (opcional)
+           ======================================== */
+        /* 
+            :root define variables CSS globales para el tema claro.
+            Se usan con var(--nombre) en todo el CSS para mantener consistencia.
+            Incluye colores, sombras, transiciones, radios y padding.
+        */
+        :root {
+            --bg-primary: #ffffff;        /* Fondo principal (blanco) */
+            --bg-secondary: #f8f9fa;      /* Fondo secundario (gris claro) */
+            --bg-card: #ffffff;           /* Fondo de tarjetas */
+            --bg-element: #e9ecef;         /* Fondo de elementos interactivos */
+            --accent-primary: #7c3aed;     /* Color principal (violeta) */
+            --accent-secondary: #06d6a0;  /* Color secundario (verde) */
+            --text-primary: #1a1a1a;      /* Texto principal */
+            --text-secondary: #6b7280;    /* Texto secundario */
+            --success: #10b981;           /* Verde éxito */
+            --warning: #f59e0b;           /* Amarillo advertencia */
+            --danger: #ef4444;            /* Rojo peligro */
+            --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);     /* Sombra suave */
+            --glow: 0 0 15px rgba(124, 58, 237, 0.2);    /* Brillo violeta */
+            --transition: all 0.3s ease;                /* Transición suave */
+            --radius: 16px;                              /* Radio de bordes */
+            --padding: 16px;                             /* Padding base */
+        }
+
+        /* ========================================
+           MODO OSCURO PURO: SOLO NEGRO + EFECTOS
+           ======================================== */
+        /* 
+            Clase .theme-dark sobrescribe las variables para modo oscuro.
+            Se activa/desactiva con JavaScript y se guarda en localStorage.
+            Fondo negro puro, textos blancos, efectos de brillo mejorados.
+        */
+        .theme-dark {
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0f;
+            --bg-card: #000000;
+            --bg-element: #111118;
+            --accent-primary: #a78bfa;
+            --accent-secondary: #34d399;
+            --text-primary: #ffffff;
+            --text-secondary: #cbd5e1;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+            --glow: 0 0 20px rgba(167, 139, 250, 0.4);
+        }
+
+        /* ========================================
+           RESETEO GLOBAL
+           ======================================== */
+        /* 
+            * elimina márgenes y padding por defecto.
+            box-sizing: border-box asegura que padding no aumente el tamaño.
+            -webkit-tap-highlight-color: transparent elimina el resaltado al tocar en móvil.
+        */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 
+            html, body: 100% de altura para layout completo.
+            overflow-x: hidden evita scroll horizontal.
+            font-family: Fuentes modernas y fallback.
+            background y color usan variables CSS.
+            transition aplica a cambios de tema.
+        */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            transition: var(--transition);
+        }
+
+        /* 
+            body: Flex column para header, main, footer.
+            min-height: 100vh asegura que ocupe toda la pantalla.
+            padding con variable.
+            !important en background-image evita fondos no deseados.
+        */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: var(--padding);
+            background-image: none !important;
+        }
+
+        /* 
+            .container: Centra el contenido con max-width.
+            Flex column con gap para espaciado uniforme.
+        */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ========================================
+           HEADER
+           ======================================== */
+        header { padding: 20px 0; }
+
+        /* 
+            Estructura flexible con logo a la izquierda y toggle a la derecha.
+            En móviles se apila verticalmente.
+        */
+        .header-content { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 12px; }
+
+        /* 
+            LOGO: Icono con gradiente + texto con efecto de clip.
+        */
+        .logo { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .logo-icon { 
+            width: 70px; height: 70px; 
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); 
+            border-radius: 20px; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: var(--glow); 
+            border: 2px solid rgba(167, 139, 250, 0.3); 
+        }
+        .logo-icon i { font-size: 1.8rem; color: white; }
+        .logo-text { 
+            font-size: 2.2rem; font-weight: 800; 
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); 
+            -webkit-background-clip: text; background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        .tagline { font-size: 1rem; color: var(--text-secondary); margin-top: 4px; }
+
+        /* 
+            BADGE DE SEGURIDAD: Mensaje destacado con icono.
+        */
+        .security-badge { 
+            display: inline-flex; align-items: center; gap: 8px; 
+            background: rgba(167, 139, 250, 0.15); 
+            color: var(--accent-primary); 
+            padding: 10px 20px; border-radius: 24px; 
+            font-size: 0.9rem; 
+            border: 1px solid rgba(167, 139, 250, 0.3); 
+            font-weight: 600; 
+        }
+
+        /* ========================================
+           TOGGLE DE TEMA
+           ======================================== */
+        /* 
+            Botón interactivo para cambiar entre modo claro y oscuro.
+            Incluye icono y texto que cambian dinámicamente.
+        */
+        .theme-toggle { 
+            display: flex; align-items: center; gap: 10px; 
+            background: var(--bg-element); 
+            border-radius: 30px; 
+            padding: 10px 18px; 
+            border: 1px solid rgba(167, 139, 250, 0.3); 
+            cursor: pointer; 
+            transition: var(--transition); 
+            box-shadow: var(--shadow); 
+            min-width: 140px; 
+            justify-content: center; 
+        }
+        .theme-toggle:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 0 25px rgba(167, 139, 250, 0.5); 
+        }
+        .theme-toggle i { font-size: 1.3rem; color: var(--accent-primary); }
+        .theme-toggle span { font-weight: 600; color: var(--text-primary); font-size: 0.95rem; }
+
+        /* ========================================
+           MAIN CONTENT
+           ======================================== */
+        .main-content { display: flex; flex-direction: column; gap: 24px; }
+
+        /* ========================================
+           TARJETA DE CONTRASEÑA
+           ======================================== */
+        .password-card { 
+            background: var(--bg-card); 
+            border-radius: var(--radius); 
+            padding: 24px; 
+            box-shadow: var(--shadow); 
+            border: 1px solid rgba(167, 139, 250, 0.25); 
+            transition: var(--transition); 
+        }
+        .card-title { 
+            display: flex; align-items: center; justify-content: center; gap: 12px; 
+            margin-bottom: 24px; 
+            font-size: 1.5rem; 
+            color: var(--accent-primary); 
+            font-weight: 700; 
+            text-align: center; 
+        }
+
+        /* ========================================
+           DISPLAY DE CONTRASEÑA
+           ======================================== */
+        .password-display { 
+            display: flex; 
+            margin-bottom: 24px; 
+            background: var(--bg-secondary); 
+            border-radius: 14px; 
+            overflow: hidden; 
+            border: 1px solid rgba(167, 139, 250, 0.2); 
+            min-height: 70px; 
+            position: relative; 
+        }
+        /* 
+            Input de solo lectura con fuente monoespaciada.
+            -webkit-text-security: disc oculta la contraseña por defecto.
+            .show la muestra al hacer clic en el ojo.
+        */
+        #password { 
+            flex: 1; 
+            padding: 20px 60px 20px 20px; 
+            font-size: 1.1rem; 
+            background: transparent; 
+            border: none; 
+            color: var(--text-primary); 
+            font-family: 'Courier New', monospace; 
+            letter-spacing: 1px; 
+            -webkit-text-security: disc; 
+            font-weight: 500; 
+            word-break: break-all; 
+        }
+        #password.show { -webkit-text-security: none; }
+
+        /* ========================================
+           BOTONES VER/COPIAR
+           ======================================== */
+        .password-actions { 
+            position: absolute; right: 0; top: 0; bottom: 0; 
+            display: flex; 
+            background: var(--bg-element); 
+            border-left: 1px solid rgba(167, 139, 250, 0.2); 
+        }
+        .password-btn { 
+            background: transparent; 
+            color: var(--text-secondary); 
+            border: none; 
+            padding: 0; 
+            cursor: pointer; 
+            transition: var(--transition); 
+            display: flex; align-items: center; justify-content: center; 
+            width: 60px; min-width: 60px; 
+            font-size: 1.4rem; 
+        }
+        .password-btn:hover { 
+            color: var(--accent-primary); 
+            background: rgba(167, 139, 250, 0.2); 
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.4); 
+        }
+        .password-btn.copy { 
+            background: var(--accent-primary); 
+            color: white; 
+            font-size: 1.5rem; 
+        }
+        .password-btn.copy:hover { 
+            background: #9f72e6; 
+            filter: brightness(1.2); 
+        }
+
+        /* ========================================
+           OPCIONES
+           ======================================== */
+        .option-group { margin-bottom: 24px; }
+        .option-label { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 16px; 
+        }
+        .option-label span { font-weight: 600; font-size: 1.1rem; }
+        .option-value { color: var(--accent-primary); font-weight: 700; font-size: 1.2rem; }
+
+        /* 
+            SLIDER DE LONGITUD: Personalizado con thumb circular.
+        */
+        .slider-container { margin-bottom: 28px; }
+        .slider { 
+            -webkit-appearance: none; 
+            width: 100%; height: 12px; 
+            border-radius: 10px; 
+            background: var(--bg-element); 
+            outline: none; 
+            border: 1px solid rgba(167, 139, 250, 0.2); 
+        }
+        .slider::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            width: 32px; height: 32px; 
+            border-radius: 50%; 
+            background: var(--accent-primary); 
+            cursor: pointer; 
+            box-shadow: var(--glow); 
+            border: 3px solid #000; 
+        }
+        .slider::-moz-range-thumb { 
+            width: 32px; height: 32px; 
+            border-radius: 50%; 
+            background: var(--accent-primary); 
+            cursor: pointer; 
+            border: 3px solid #000; 
+            box-shadow: var(--glow); 
+        }
+
+        /* ========================================
+           CHECKBOX GRID - RESPONSIVO
+           ======================================== */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: var(--bg-element);
+            border-radius: 14px;
+            transition: var(--transition);
+            cursor: pointer;
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .checkbox-option:hover {
+            background: rgba(167, 139, 250, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+        }
+        .checkbox-option input {
+            display: none; /* Oculta el checkbox nativo */
+        }
+        .checkmark {
+            width: 28px;
+            height: 28px;
+            border: 2.5px solid var(--text-secondary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .checkbox-option input:checked + .checkmark {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 16px rgba(167, 139, 250, 0.7);
+        }
+        /* Checkmark con símbolo ✓ */
+        .checkbox-option input:checked + .checkmark::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .checkbox-option span:last-child {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        /* ========================================
+           MEDIDOR DE FORTALEZA
+           ======================================== */
+        .strength-meter { margin-bottom: 24px; }
+        .strength-visual { 
+            height: 14px; 
+            background: var(--bg-element); 
+            border-radius: 10px; 
+            margin-bottom: 14px; 
+            overflow: hidden; 
+            display: flex; 
+            gap: 4px; 
+            border: 1px solid rgba(167, 139, 250, 0.2); 
+        }
+        .strength-segment { 
+            flex: 1; height: 100%; 
+            border-radius: 10px; 
+            transition: var(--transition); 
+        }
+        .strength-text { 
+            display: flex; justify-content: space-between; 
+            font-size: 1rem; font-weight: 600; 
+        }
+
+        /* ========================================
+           BOTONES PRINCIPALES
+           ======================================== */
+        .actions { display: flex; flex-direction: column; gap: 16px; }
+        .btn { 
+            padding: 22px; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 1.15rem; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: var(--transition); 
+            display: flex; align-items: center; justify-content: center; 
+            gap: 12px; 
+            min-height: 60px; 
+        }
+        .btn-primary { 
+            background: var(--accent-primary); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4); 
+        }
+        .btn-primary:hover { 
+            background: #9f72e6; 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 25px rgba(167, 139, 250, 0.5); 
+        }
+        .btn-secondary { 
+            background: rgba(167, 139, 250, 0.15); 
+            color: var(--text-primary); 
+            border: 1px solid rgba(167, 139, 250, 0.3); 
+        }
+        .btn-secondary:hover { 
+            background: rgba(167, 139, 250, 0.25); 
+            transform: translateY(-2px); 
+        }
+
+        /* ========================================
+           INFO SECTION
+           ======================================== */
+        .info-section { margin-top: 28px; }
+        .info-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .info-card { 
+            background: var(--bg-card); 
+            border-radius: var(--radius); 
+            padding: 24px; 
+            border: 1px solid rgba(167, 139, 250, 0.25); 
+            transition: var(--transition); 
+            text-align: center; 
+            box-shadow: var(--shadow); 
+        }
+        .info-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 0 30px rgba(167, 139, 250, 0.3); 
+        }
+        .info-card h3 { 
+            display: flex; align-items: center; justify-content: center; gap: 12px; 
+            margin-bottom: 16px; 
+            color: var(--accent-primary); 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+        }
+        .info-card p { 
+            color: var(--text-secondary); 
+            font-size: 0.95rem; 
+            line-height: 1.5; 
+        }
+
+        /* ========================================
+           FOOTER + NAVEGACIÓN
+           ======================================== */
+        footer { 
+            text-align: center; 
+            margin-top: 32px; 
+            padding: 28px 0 20px 0; 
+            color: var(--text-secondary); 
+            font-size: 0.9rem; 
+            border-top: 1px solid rgba(167, 139, 250, 0.2); 
+        }
+        .nav-buttons { 
+            display: flex; justify-content: center; gap: 16px; 
+            margin-top: 20px; 
+        }
+        .nav-btn { 
+            padding: 14px 24px; 
+            background: var(--bg-element); 
+            color: var(--text-primary); 
+            border: 1px solid rgba(167, 139, 250, 0.3); 
+            border-radius: 12px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: var(--transition); 
+            display: flex; align-items: center; gap: 8px; 
+            min-width: 120px; 
+            justify-content: center; 
+        }
+        .nav-btn:hover { 
+            background: rgba(167, 139, 250, 0.2); 
+            transform: translateY(-2px); 
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.3); 
+        }
+        .nav-btn i { font-size: 1.1rem; }
+
+        /* ========================================
+           TOAST (NOTIFICACIÓN)
+           ======================================== */
+        .toast { 
+            position: fixed; 
+            bottom: 24px; left: 16px; right: 16px; 
+            background: var(--bg-card); 
+            color: var(--text-primary); 
+            padding: 18px 24px; 
+            border-radius: 14px; 
+            box-shadow: var(--shadow); 
+            display: flex; align-items: center; justify-content: center; 
+            gap: 12px; 
+            border-left: 4px solid var(--success); 
+            transform: translateY(150%); 
+            transition: transform 0.4s ease; 
+            z-index: 1000; 
+            border: 1px solid rgba(167, 139, 250, 0.3); 
+            font-size: 1rem; 
+            font-weight: 600; 
+        }
+        .toast.show { transform: translateY(0); }
+
+        /* ========================================
+           ANIMACIONES
+           ======================================== */
+        @keyframes pulse { 
+            0% { transform: scale(1); } 
+            50% { transform: scale(1.02); } 
+            100% { transform: scale(1); } 
+        }
+        .pulse { animation: pulse 0.4s ease; }
+
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+        @media (min-width: 768px) {
+            .container { padding: 24px; }
+            .header-top { flex-wrap: nowrap; }
+            .logo { flex-direction: row; align-items: center; }
+            .logo-icon { width: 60px; height: 60px; }
+            .logo-text { font-size: 2rem; }
+            .main-content { flex-direction: row; align-items: flex-start; }
+            .password-card { flex: 1; }
+            .checkbox-grid { grid-template-columns: repeat(2, 1fr); }
+            .actions { flex-direction: row; }
+            .btn { flex: 1; }
+            .info-grid { grid-template-columns: repeat(2, 1fr); }
+            .toast { 
+                left: 50%; 
+                transform: translateX(-50%) translateY(150%); 
+                width: auto; min-width: 350px; max-width: 500px; 
+            }
+            .toast.show { transform: translateX(-50%) translateY(0); }
+        }
+        @media (min-width: 1024px) {
+            .info-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* ========================================
+           ACCESIBILIDAD
+           ======================================== */
+        button:focus, input:focus, .checkbox-option:focus { 
+            outline: 2px solid var(--accent-primary); 
+            outline-offset: 2px; 
+        }
+        @media (prefers-reduced-motion: reduce) { 
+            * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } 
+        }
+    </style>
+</head>
+
+<!-- ========================================
+     CUERPO DEL DOCUMENTO
+     ======================================== -->
+<body class="theme-dark">
+    <!-- 
+        class="theme-dark": Aplica modo oscuro por defecto.
+        Se puede cambiar con el toggle.
+    -->
+
+    <!-- ========================================
+         CONTENEDOR PRINCIPAL
+         ======================================== -->
+    <div class="container">
+        
+        <!-- ========================================
+             HEADER
+             ======================================== -->
+        <header>
+            <div class="header-content">
+                <div class="header-top">
+                    <!-- LOGO -->
+                    <div class="logo">
+                        <div class="logo-icon"><i class="fas fa-lock"></i></div>
+                        <div>
+                            <div class="logo-text">Vault Zero</div>
+                            <div class="tagline">Generador de Contraseñas Seguras</div>
+                        </div>
+                    </div>
+                    <!-- TOGGLE DE TEMA -->
+                    <div class="theme-toggle" id="theme-toggle">
+                        <i class="fas fa-sun"></i> <span>Modo Claro</span>
+                    </div>
+                </div>
+                <!-- BADGE DE SEGURIDAD -->
+                <div class="security-badge"><i class="fas fa-shield-alt"></i> Sin Repetición de Contraseñas</div>
+            </div>
+        </header>
+
+        <!-- ========================================
+             MAIN CONTENT
+             ======================================== -->
+        <main class="main-content">
+            <!-- TARJETA DE GENERACIÓN -->
+            <div class="password-card">
+                <h2 class="card-title"><i class="fas fa-key"></i> Generar Contraseña</h2>
+              
+                <!-- DISPLAY DE CONTRASEÑA -->
+                <div class="password-display">
+                    <input type="text" id="password" readonly placeholder="Tu contraseña segura aparecerá aquí">
+                    <div class="password-actions">
+                        <button class="password-btn" id="visibility-btn" title="Mostrar/Ocultar"><i class="fas fa-eye"></i></button>
+                        <button class="password-btn copy" id="copy-btn" title="Copiar"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+
+                <!-- OPCIONES DE CONFIGURACIÓN -->
+                <div class="password-options">
+                    <!-- LONGITUD -->
+                    <div class="option-group">
+                        <div class="option-label"><span>Longitud</span><span class="option-value" id="length-value">16</span></div>
+                        <div class="slider-container"><input type="range" min="8" max="64" value="16" class="slider" id="length-slider"></div>
+                    </div>
+                    <!-- TIPOS DE CARACTERES -->
+                    <div class="option-group">
+                        <div class="option-label"><span>Caracteres</span></div>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-option">
+                                <input type="checkbox" id="uppercase" checked>
+                                <span class="checkmark"></span>
+                                <span>Mayúsculas</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" id="lowercase" checked>
+                                <span class="checkmark"></span>
+                                <span>Minúsculas</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" id="numbers" checked>
+                                <span class="checkmark"></span>
+                                <span>Números</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" id="symbols" checked>
+                                <span class="checkmark"></span>
+                                <span>Símbolos</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MEDIDOR DE FORTALEZA -->
+                <div class="strength-meter">
+                    <div class="option-label"><span>Fortaleza</span><span class="option-value" id="strength-text">-</span></div>
+                    <div class="strength-visual" id="strength-visual">
+                        <div class="strength-segment" id="segment-1"></div>
+                        <div class="strength-segment" id="segment-2"></div>
+                        <div class="strength-segment" id="segment-3"></div>
+                        <div class="strength-segment" id="segment-4"></div>
+                        <div class="strength-segment" id="segment-5"></div>
+                    </div>
+                </div>
+
+                <!-- BOTONES DE ACCIÓN -->
+                <div class="actions">
+                    <button class="btn btn-primary" id="generate-btn"><i class="fas fa-bolt"></i> Generar</button>
+                    <button class="btn btn-secondary" id="reset-btn"><i class="fas fa-redo"></i> Restablecer</button>
+                </div>
+            </div>
+
+            <!-- SECCIÓN INFORMATIVA -->
+            <div class="info-section">
+                <div class="info-grid">
+                    <div class="info-card"><h3><i class="fas fa-fingerprint"></i> Únicas</h3><p>Nunca se repiten gracias al historial criptográfico.</p></div>
+                    <div class="info-card"><h3><i class="fas fa-eye-slash"></i> Privacidad</h3><p>Ocultas por defecto, solo tú las ves.</p></div>
+                    <div class="info-card"><h3><i class="fas fa-mobile-alt"></i> Móvil</h3><p>Perfecto para pantallas pequeñas.</p></div>
+                    <div class="info-card"><h3><i class="fas fa-bolt"></i> Rápido</h3><p>Generación instantánea en tiempo real.</p></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ========================================
+             FOOTER
+             ======================================== -->
+        <footer>
+            <p>Vault Zero © 2025 - Seguridad Total</p>
+            <div class="nav-buttons">
+                <a href="index.html" class="nav-btn"><i class="fas fa-arrow-left"></i> Atrás</a>
+                <a href="meta.html" class="nav-btn">Siguiente <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ========================================
+         TOAST DE COPIADO
+         ======================================== -->
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span>¡Copiado al portapapeles!</span></div>
+
+    <!-- ========================================
+         JAVASCRIPT PRINCIPAL
+         ======================================== -->
+    <script>
+        /* 
+            Se ejecuta cuando el DOM está completamente cargado.
+            Inicializa toda la lógica interactiva.
+        */
+        document.addEventListener('DOMContentLoaded', function() {
+            // === SELECTORES DE ELEMENTOS ===
+            const passwordInput = document.getElementById('password');
+            const copyBtn = document.getElementById('copy-btn');
+            const visibilityBtn = document.getElementById('visibility-btn');
+            const generateBtn = document.getElementById('generate-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const lengthSlider = document.getElementById('length-slider');
+            const lengthValue = document.getElementById('length-value');
+            const uppercaseCheckbox = document.getElementById('uppercase');
+            const lowercaseCheckbox = document.getElementById('lowercase');
+            const numbersCheckbox = document.getElementById('numbers');
+            const symbolsCheckbox = document.getElementById('symbols');
+            const strengthText = document.getElementById('strength-text');
+            const toast = document.getElementById('toast');
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = themeToggle.querySelector('i');
+            const themeText = themeToggle.querySelector('span');
+            const strengthSegments = Array.from({length: 5}, (_, i) => document.getElementById(`segment-${i+1}`));
+
+            // === HISTORIAL Y CONSTANTES ===
+            const passwordHistory = new Set();     // Evita repeticiones
+            const maxHistorySize = 100;            // Máximo de contraseñas guardadas
+            const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+            const numberChars = '0123456789';
+            const symbolChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+            const strengthColors = { 
+                weak: '#f87171', 
+                medium: '#fbbf24', 
+                strong: '#34d399', 
+                verystrong: '#34d399' 
+            };
+
+            // === INICIALIZACIÓN DEL TEMA ===
+            document.body.classList.add('theme-dark');
+            themeIcon.classList.remove('fa-moon'); 
+            themeIcon.classList.add('fa-sun'); 
+            themeText.textContent = 'Modo Claro';
+
+            // === TOGGLE DE TEMA ===
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('theme-dark');
+                const isDark = document.body.classList.contains('theme-dark');
+                themeIcon.classList.toggle('fa-sun', isDark); 
+                themeIcon.classList.toggle('fa-moon', !isDark);
+                themeText.textContent = isDark ? 'Modo Claro' : 'Modo Oscuro';
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            });
+
+            // === VISIBILIDAD DE CONTRASEÑA ===
+            visibilityBtn.addEventListener('click', () => {
+                passwordInput.classList.toggle('show');
+                const icon = visibilityBtn.querySelector('i');
+                icon.classList.toggle('fa-eye'); 
+                icon.classList.toggle('fa-eye-slash');
+            });
+
+            // === SLIDER DE LONGITUD ===
+            lengthSlider.addEventListener('input', () => { 
+                lengthValue.textContent = lengthSlider.value; 
+                generatePassword(); 
+            });
+
+            // === CHECKBOXES ===
+            [uppercaseCheckbox, lowercaseCheckbox, numbersCheckbox, symbolsCheckbox].forEach(cb => 
+                cb.addEventListener('change', generatePassword)
+            );
+
+            // === BOTONES PRINCIPALES ===
+            generateBtn.addEventListener('click', generatePassword);
+            resetBtn.addEventListener('click', () => {
+                lengthSlider.value = 16; 
+                lengthValue.textContent = '16';
+                [uppercaseCheckbox, lowercaseCheckbox, numbersCheckbox, symbolsCheckbox].forEach(cb => cb.checked = true);
+                generatePassword();
+            });
+
+            // === COPIAR AL PORTAPAPAPES ===
+            copyBtn.addEventListener('click', () => {
+                if (passwordInput.value && !passwordInput.value.includes('Selecciona')) {
+                    navigator.clipboard.writeText(passwordInput.value)
+                        .then(showToast)
+                        .catch(() => {
+                            passwordInput.select(); 
+                            document.execCommand('copy'); 
+                            showToast();
+                        });
+                }
+            });
+
+            // === FUNCIÓN PRINCIPAL: GENERAR CONTRASEÑA ===
+            function generatePassword() {
+                const length = +lengthSlider.value;
+                const opts = [uppercaseCheckbox, lowercaseCheckbox, numbersCheckbox, symbolsCheckbox].map(c => c.checked);
+                
+                if (!opts.some(Boolean)) { 
+                    passwordInput.value = 'Selecciona al menos una opción'; 
+                    updateStrengthIndicator(0, 'weak'); 
+                    return; 
+                }
+
+                let charSet = '';
+                if (opts[0]) charSet += uppercaseChars;
+                if (opts[1]) charSet += lowercaseChars;
+                if (opts[2]) charSet += numberChars;
+                if (opts[3]) charSet += symbolChars;
+
+                let password, attempts = 0;
+                do {
+                    password = generateRandomPassword(charSet, length);
+                    if (++attempts > 100) { 
+                        passwordHistory.clear(); 
+                        break; 
+                    }
+                } while (passwordHistory.has(password));
+
+                passwordHistory.add(password);
+                if (passwordHistory.size > maxHistorySize) 
+                    passwordHistory.delete(passwordHistory.values().next().value);
+
+                passwordInput.value = password;
+                passwordInput.classList.remove('show');
+                visibilityBtn.querySelector('i').classList.remove('fa-eye-slash'); 
+                visibilityBtn.querySelector('i').classList.add('fa-eye');
+                passwordInput.classList.add('pulse'); 
+                setTimeout(() => passwordInput.classList.remove('pulse'), 400);
+
+                const strength = calculatePasswordStrength(password, length);
+                updateStrengthIndicator(strength.score, strength.level);
+            }
+
+            // === GENERACIÓN ALEATORIA CON CRYPTO ===
+            function generateRandomPassword(set, len) {
+                const arr = crypto.getRandomValues(new Uint32Array(len));
+                return Array.from(arr, n => set[n % set.length]).join('');
+            }
+
+            // === CÁLCULO DE FORTALEZA ===
+            function calculatePasswordStrength(pw, len) {
+                let score = 0;
+                if (len >= 8) score += 10; 
+                if (len >= 12) score += 15; 
+                if (len >= 16) score += 20; 
+                if (len >= 20) score += 25;
+                if (/[A-Z]/.test(pw)) score += 15; 
+                if (/[a-z]/.test(pw)) score += 15; 
+                if (/[0-9]/.test(pw)) score += 15; 
+                if (/[^A-Za-z0-9]/.test(pw)) score += 20;
+                score += Math.min(20, (new Set(pw).size / len) * 20);
+                
+                let level = score < 30 ? 'Débil' : 
+                           score < 60 ? 'Media' : 
+                           score < 80 ? 'Fuerte' : 'Muy Fuerte';
+                return { score, level };
+            }
+
+            // === ACTUALIZAR MEDIDOR VISUAL ===
+            function updateStrengthIndicator(score, level) {
+                strengthText.textContent = level;
+                const filled = Math.ceil(score / 20);
+                strengthSegments.forEach((seg, i) => {
+                    seg.style.backgroundColor = i < filled ? 
+                        strengthColors[level.toLowerCase().replace(' ', '')] || '#34d399' : 
+                        'var(--bg-element)';
+                });
+            }
+
+            // === MOSTRAR TOAST ===
+            function showToast() {
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+
+            // === GENERAR CONTRASEÑA AL CARGAR ===
+            generatePassword();
+        });
+    </script>
+</body>
+</html>
